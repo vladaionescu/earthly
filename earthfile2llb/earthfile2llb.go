@@ -2,7 +2,6 @@ package earthfile2llb
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/moby/buildkit/client/llb"
 	gwclient "github.com/moby/buildkit/frontend/gateway/client"
@@ -71,6 +70,10 @@ type ConvertOpt struct {
 	// AllowPrivileged is used to allow (or prevent) any "RUN --privileged" or RUNs under a LOCALLY target to be executed,
 	// when set to false, it prevents other referenced remote targets from requesting elevated privileges
 	AllowPrivileged bool
+	// DoSaves is used to control when SAVE ARTIFACT AS LOCAL calls will actually output the artifacts locally
+	// this is to differentiate between calling a target that saves an artifact directly vs using a FROM which indirectly
+	// calls a target which saves an artifact as a side effect.
+	DoSaves bool
 	// Gitlookup is used to attach credentials to GIT CLONE operations
 	GitLookup *buildcontext.GitLookup
 
@@ -113,8 +116,9 @@ func Earthfile2LLB(ctx context.Context, target domain.Target, opt ConvertOpt) (m
 		return nil, errors.Wrapf(err, "failed to apply version feature overrides")
 	}
 
-	if ftrs.ReferencedSaveOnly {
-		fmt.Printf("TODO feature-flip referenced save artifact as local feature in a future PR.\n")
+	if !ftrs.ReferencedSaveOnly {
+		// 0.5 behaviour is to save all artifacts and images irrigardless if they are directly referenced or not
+		opt.DoSaves = true
 	}
 
 	targetWithMetadata := bc.Ref.(domain.Target)
@@ -133,7 +137,7 @@ func Earthfile2LLB(ctx context.Context, target domain.Target, opt ConvertOpt) (m
 	if err != nil {
 		return nil, err
 	}
-	interpreter := newInterpreter(converter, targetWithMetadata, opt.AllowPrivileged, opt.ParallelConversion, opt.Parallelism, opt.Console, opt.GitLookup)
+	interpreter := newInterpreter(converter, targetWithMetadata, opt.AllowPrivileged, opt.DoSaves, opt.ParallelConversion, opt.Parallelism, opt.Console, opt.GitLookup)
 	err = interpreter.Run(ctx, bc.Earthfile)
 	if err != nil {
 		return nil, err

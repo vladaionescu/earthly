@@ -35,6 +35,7 @@ type Interpreter struct {
 	pushOnlyAllowed bool
 	local           bool
 	allowPrivileged bool
+	doSaves         bool
 
 	stack string
 
@@ -48,12 +49,13 @@ type Interpreter struct {
 	gitLookup          *buildcontext.GitLookup
 }
 
-func newInterpreter(c *Converter, t domain.Target, allowPrivileged, parallelConversion bool, parallelism *semaphore.Weighted, console conslogging.ConsoleLogger, gitLookup *buildcontext.GitLookup) *Interpreter {
+func newInterpreter(c *Converter, t domain.Target, allowPrivileged, doSaves, parallelConversion bool, parallelism *semaphore.Weighted, console conslogging.ConsoleLogger, gitLookup *buildcontext.GitLookup) *Interpreter {
 	return &Interpreter{
 		converter:          c,
 		target:             t,
 		stack:              c.StackString(),
 		allowPrivileged:    allowPrivileged,
+		doSaves:            doSaves,
 		parallelism:        parallelism,
 		parallelConversion: parallelConversion,
 		parallelErrChan:    make(chan error),
@@ -731,7 +733,9 @@ func (i *Interpreter) handleSaveArtifact(ctx context.Context, cmd spec.Command) 
 	saveTo := "./"
 	if len(args) >= 4 {
 		if strings.Join(args[len(args)-3:len(args)-1], " ") == "AS LOCAL" {
-			saveAsLocalTo = args[len(args)-1]
+			if i.doSaves {
+				saveAsLocalTo = args[len(args)-1]
+			}
 			if len(args) == 5 {
 				saveTo = args[1]
 			}
@@ -767,6 +771,9 @@ func (i *Interpreter) handleSaveArtifact(ctx context.Context, cmd spec.Command) 
 }
 
 func (i *Interpreter) handleSaveImage(ctx context.Context, cmd spec.Command) error {
+	if !i.doSaves {
+		return nil
+	}
 	opts := saveImageOpts{}
 	args, err := flagutil.ParseArgs("SAVE IMAGE", &opts, getArgsCopy(cmd))
 	if err != nil {
@@ -846,10 +853,10 @@ func (i *Interpreter) handleBuild(ctx context.Context, cmd spec.Command, async b
 	for _, bas := range crossProductBuildArgs {
 		for _, platform := range platformsSlice {
 			if async {
-				errChan := i.converter.BuildAsync(ctx, fullTargetName, platform, allowPrivileged, bas)
+				errChan := i.converter.BuildAsync(ctx, fullTargetName, platform, allowPrivileged, i.doSaves, bas)
 				i.monitorErrChan(ctx, errChan)
 			} else {
-				err = i.converter.Build(ctx, fullTargetName, platform, allowPrivileged, bas)
+				err = i.converter.Build(ctx, fullTargetName, platform, allowPrivileged, i.doSaves, bas)
 				if err != nil {
 					return i.wrapError(err, cmd.SourceLocation, "apply BUILD %s", fullTargetName)
 				}

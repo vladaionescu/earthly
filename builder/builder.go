@@ -180,6 +180,7 @@ func (b *Builder) convertAndBuild(ctx context.Context, target domain.Target, opt
 				AllowLocally:         !b.opt.Strict,
 				AllowInteractive:     !b.opt.Strict,
 				AllowPrivileged:      opt.AllowPrivileged,
+				DoSaves:              true,
 				ParallelConversion:   b.opt.ParallelConversion,
 				Parallelism:          b.opt.Parallelism,
 				Console:              b.opt.Console,
