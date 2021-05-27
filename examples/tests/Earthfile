@@ -491,12 +491,23 @@ save-artifact-selective-test4:
         test ! -f d && \
         test   -f e
 
+save-artifact-selective-test5:
+    DO +RUN_EARTHLY --earthfile=save-artifact-selective.earth --target=+test5
+    RUN test ! -f a && \
+        test ! -f b && \
+        test ! -f c && \
+        test ! -f d && \
+        test ! -f e && \
+        test ! -f test5sub && \
+        test   -f test5
+
 save-artifact-selective:
     # test that the `--referenced-save-only` feature only saves referenced artifacts
     BUILD +save-artifact-selective-test1
     BUILD +save-artifact-selective-test2
     BUILD +save-artifact-selective-test3
     BUILD +save-artifact-selective-test4
+    BUILD +save-artifact-selective-test5
 
 save-artifact-selective-legacy:
     DO +RUN_EARTHLY --earthfile=save-artifact-legacy.earth --target=+all
