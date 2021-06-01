@@ -146,6 +146,7 @@ func (sp *successPrinter) incrementIndex() {
 }
 
 func (b *Builder) convertAndBuild(ctx context.Context, target domain.Target, opt BuildOpt) (*states.MultiTarget, error) {
+	fmt.Printf("call to convertAndBuild for %v\n", target)
 	successFun := func(msg string) func() {
 		return func() {
 			if opt.PrintSuccess {
