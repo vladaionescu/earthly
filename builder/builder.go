@@ -338,7 +338,7 @@ func (b *Builder) convertAndBuild(ctx context.Context, target domain.Target, opt
 				!opt.OnlyFinalTargetImages &&
 				opt.OnlyArtifact == nil)
 			//TODO ACB enable saves here?
-			fmt.Printf("sts.SaveLocals: %v\n", sts.SaveLocals)
+			fmt.Printf("sts.SaveLocals: %v %v\n", sts.Target, sts.SaveLocals)
 
 			if performSaveLocals {
 				for _, saveLocal := range b.targetPhaseArtifacts(sts) {
