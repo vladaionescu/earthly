@@ -337,6 +337,9 @@ func (b *Builder) convertAndBuild(ctx context.Context, target domain.Target, opt
 				!opt.NoOutput &&
 				!opt.OnlyFinalTargetImages &&
 				opt.OnlyArtifact == nil)
+			//TODO ACB enable saves here?
+			fmt.Printf("sts.SaveLocals: %v\n", sts.SaveLocals)
+
 			if performSaveLocals {
 				for _, saveLocal := range b.targetPhaseArtifacts(sts) {
 					ref, err := b.artifactStateToRef(childCtx, gwClient, sts.SeparateArtifactsState[saveLocal.Index], sts.Platform)
