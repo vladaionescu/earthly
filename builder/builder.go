@@ -146,6 +146,7 @@ func (sp *successPrinter) incrementIndex() {
 }
 
 func (b *Builder) convertAndBuild(ctx context.Context, target domain.Target, opt BuildOpt) (*states.MultiTarget, error) {
+	fmt.Printf("call to convertAndBuild for %v\n", target)
 	successFun := func(msg string) func() {
 		return func() {
 			if opt.PrintSuccess {
@@ -182,6 +183,7 @@ func (b *Builder) convertAndBuild(ctx context.Context, target domain.Target, opt
 				AllowLocally:         !b.opt.Strict,
 				AllowInteractive:     !b.opt.Strict,
 				AllowPrivileged:      opt.AllowPrivileged,
+				DoSaves:              true,
 				ParallelConversion:   b.opt.ParallelConversion,
 				Parallelism:          b.opt.Parallelism,
 				Console:              b.opt.Console,
@@ -338,6 +340,9 @@ func (b *Builder) convertAndBuild(ctx context.Context, target domain.Target, opt
 				!opt.NoOutput &&
 				!opt.OnlyFinalTargetImages &&
 				opt.OnlyArtifact == nil)
+			//TODO ACB enable saves here?
+			fmt.Printf("sts.SaveLocals: %v %v\n", sts.Target, sts.SaveLocals)
+
 			if performSaveLocals {
 				for _, saveLocal := range b.targetPhaseArtifacts(sts) {
 					ref, err := b.artifactStateToRef(childCtx, gwClient, sts.SeparateArtifactsState[saveLocal.Index], sts.Platform)
